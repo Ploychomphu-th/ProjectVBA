@@ -1,0 +1,78 @@
+Private Sub btnAdd_Click()
+    Dim ws As Worksheet
+    Dim bookTable As ListObject
+    Dim found As Boolean
+    Dim i As Long
+    
+    ' Set the worksheet and table
+    Set ws = ThisWorkbook.Sheets("Stock")
+    Set bookTable = ws.ListObjects("Book") ' The table name must match exactly
+    
+    found = False
+    
+    ' Check if the Book ID already exists
+    For i = 1 To bookTable.ListRows.Count
+        If bookTable.ListRows(i).Range.Cells(1, 1).Value = txtBookID.Value Then
+            MsgBox "The Book ID already exists!", vbExclamation
+            found = True
+            Exit For
+        End If
+    Next i
+    
+    If Not found Then
+        ' Add a new row
+        bookTable.ListRows.Add
+        With bookTable.ListRows(bookTable.ListRows.Count).Range
+            .Cells(1, 1).Value = txtBookID.Value
+            .Cells(1, 2).Value = txtTitle.Value
+            .Cells(1, 3).Value = txtAuthor.Value
+            .Cells(1, 4).Value = cboGenre.Value
+            .Cells(1, 5).Value = cboLanguage.Value
+            .Cells(1, 6).Value = txtRentalPrice.Value
+            .Cells(1, 7).Value = txtStock.Value
+        End With
+        
+        MsgBox "The book has been successfully added!", vbInformation
+    End If
+    
+    ' Clear input fields
+    txtBookID.Value = ""
+    txtTitle.Value = ""
+    txtAuthor.Value = ""
+    cboGenre.Value = ""
+    cboLanguage.Value = ""
+    txtRentalPrice.Value = ""
+    txtStock.Value = ""
+    
+    ' Hide the form
+    
+End Sub
+
+Private Sub btnCancel_Click()
+    ' Clear input fields
+    txtBookID.Value = ""
+    txtTitle.Value = ""
+    txtAuthor.Value = ""
+    cboGenre.Value = ""
+    cboLanguage.Value = ""
+    txtRentalPrice.Value = ""
+    txtStock.Value = ""
+    
+    ' Close the form
+    Me.Hide
+End Sub
+
+Private Sub UserForm_Initialize()
+    ' Add items to ComboBox Genre
+    Me.cboGenre.AddItem "Fiction"
+    Me.cboGenre.AddItem "Non-Fiction"
+    Me.cboGenre.AddItem "Sci-Fi"
+    Me.cboGenre.AddItem "Romance"
+    
+    ' Add items to ComboBox Language
+    Me.cboLanguage.AddItem "English"
+    Me.cboLanguage.AddItem "Thai"
+    Me.cboLanguage.AddItem "Japanese"
+    Me.cboLanguage.AddItem "Chinese"
+End Sub
+
