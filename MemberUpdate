@@ -1,0 +1,89 @@
+Private Sub txtUpdateMemberID_Change()
+    Dim ws As Worksheet
+    Dim memberTable As ListObject
+    Dim found As Boolean
+    Dim i As Long
+    Dim memberID As String
+    
+    ' Set the worksheet and table
+    Set ws = ThisWorkbook.Sheets("Members") ' Name of the sheet that stores member data
+    Set memberTable = ws.ListObjects("MemberList") ' The table name must match the one used in Excel
+    
+    memberID = txtUpdateMemberID.Value
+    found = False
+    
+    ' Search for MemberID in the table
+    For i = 1 To memberTable.ListRows.Count
+        If memberTable.ListRows(i).Range.Cells(1, 1).Value = memberID Then
+            found = True
+            ' Retrieve existing data and display it in the form
+            txtName.Value = memberTable.ListRows(i).Range.Cells(1, 2).Value
+            txtEmail.Value = memberTable.ListRows(i).Range.Cells(1, 3).Value
+            txtPhone.Value = memberTable.ListRows(i).Range.Cells(1, 4).Value
+            txtDate.Value = memberTable.ListRows(i).Range.Cells(1, 5).Value
+            txtAddress.Value = memberTable.ListRows(i).Range.Cells(1, 6).Value
+            Exit For
+        End If
+    Next i
+    
+    ' If MemberID is not found
+    If Not found Then
+        txtName.Value = ""
+        txtEmail.Value = ""
+        txtPhone.Value = ""
+        txtDate.Value = ""
+        txtAddress.Value = ""
+    End If
+    
+End Sub
+
+Private Sub btnUpdate_Click()
+    Dim ws As Worksheet
+    Dim memberTable As ListObject
+    Dim i As Long
+    Dim memberID As String
+    
+    ' Set the worksheet and table
+    Set ws = ThisWorkbook.Sheets("Members")
+    Set memberTable = ws.ListObjects("MemberList")
+    
+    memberID = txtUpdateMemberID.Value
+    
+    ' Search for MemberID and update data
+    For i = 1 To memberTable.ListRows.Count
+        If memberTable.ListRows(i).Range.Cells(1, 1).Value = memberID Then
+            ' Update data in the table
+            memberTable.ListRows(i).Range.Cells(1, 2).Value = txtName.Value
+            memberTable.ListRows(i).Range.Cells(1, 3).Value = txtEmail.Value
+            memberTable.ListRows(i).Range.Cells(1, 4).Value = txtPhone.Value
+            memberTable.ListRows(i).Range.Cells(1, 5).Value = txtDate.Value
+            memberTable.ListRows(i).Range.Cells(1, 6).Value = txtAddress.Value
+            
+            MsgBox "Member data updated successfully!", vbInformation
+             txtUpdateMemberID.Value = ""
+    txtName.Value = ""
+    txtEmail.Value = ""
+    txtPhone.Value = ""
+    txtDate.Value = ""
+    txtAddress.Value = ""
+            Exit Sub
+        End If
+    Next i
+    
+    MsgBox "Member ID not found!", vbExclamation
+End Sub
+
+Private Sub btnCancel_Click()
+    ' Clear all fields and close the form
+    txtUpdateMemberID.Value = ""
+    txtName.Value = ""
+    txtEmail.Value = ""
+    txtPhone.Value = ""
+    txtDate.Value = ""
+    txtAddress.Value = ""
+    Me.Hide
+End Sub
+
+Private Sub UserForm_Click()
+
+End Sub
