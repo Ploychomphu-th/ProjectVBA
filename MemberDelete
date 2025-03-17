@@ -1,0 +1,70 @@
+Private Sub txtDeleteMemberID_Change()
+    Dim ws As Worksheet
+    Dim memberTable As ListObject
+    Dim i As Long
+    Dim memberName As String
+    Dim found As Boolean
+    
+    ' Set the Worksheet and Table "Members"
+    Set ws = ThisWorkbook.Sheets("Members") ' The sheet containing member data
+    Set memberTable = ws.ListObjects("MemberList") ' The table name must match exactly
+    
+    found = False
+    memberName = ""
+    
+    ' Search the table for MemberID
+    For i = 1 To memberTable.ListRows.Count
+        If memberTable.ListRows(i).Range.Cells(1, 1).Value = txtDeleteMemberID.Value Then
+            memberName = memberTable.ListRows(i).Range.Cells(1, 2).Value ' Get the member's name
+            found = True
+            Exit For
+        End If
+    Next i
+    
+    If found Then
+        lblMemberName.Caption = "Name: " & memberName ' Display the member's name in the label
+        btnDelete.Enabled = True ' Enable the Delete button
+    Else
+        lblMemberName.Caption = "Member not found" ' Show message if the MemberID is not found
+        btnDelete.Enabled = False ' Disable the Delete button
+    End If
+End Sub
+
+Private Sub btnDelete_Click()
+    Dim ws As Worksheet
+    Dim memberTable As ListObject
+    Dim i As Long
+    Dim memberID As String
+    
+    ' Set the Worksheet and Table "Members"
+    Set ws = ThisWorkbook.Sheets("Members")
+    Set memberTable = ws.ListObjects("MemberList")
+    
+    memberID = txtDeleteMemberID.Value
+    
+    ' Search the table for the MemberID
+    For i = 1 To memberTable.ListRows.Count
+        If memberTable.ListRows(i).Range.Cells(1, 1).Value = memberID Then
+            memberTable.ListRows(i).Delete
+            MsgBox "The member has been successfully deleted from the system!", vbInformation
+            txtDeleteMemberID.Value = ""
+            lblMemberName.Caption = ""
+            Exit Sub
+        End If
+    Next i
+    
+    ' Show message if the MemberID is not found in the system
+    MsgBox "The Member ID was not found in the system", vbExclamation
+End Sub
+
+Private Sub btnCancel_Click()
+    ' Clear all fields and hide the UserForm
+    txtDeleteMemberID.Value = ""
+    lblMemberName.Caption = ""
+    btnDelete.Enabled = False ' Disable the Delete button
+    Me.Hide ' Close the form
+End Sub
+
+Private Sub UserForm_Click()
+
+End Sub
