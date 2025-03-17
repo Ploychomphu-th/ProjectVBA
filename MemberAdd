@@ -1,0 +1,63 @@
+Private Sub btnAdd_Click()
+    Dim ws As Worksheet
+    Dim memberTable As ListObject
+    Dim newRow As ListRow
+    Dim lastID As String
+    Dim newID As String
+    Dim num As Integer
+    
+    ' Set the worksheet and table
+    Set ws = ThisWorkbook.Sheets("Members") ' Name of the sheet that stores member data
+    Set memberTable = ws.ListObjects("MemberList") ' The table name must match the one used in Excel
+    
+    ' Check if the table has any data
+    If memberTable.ListRows.Count = 0 Then
+        newID = "MB001"
+    Else
+        ' Retrieve the latest MemberID
+        lastID = memberTable.ListRows(memberTable.ListRows.Count).Range.Cells(1, 1).Value
+        
+        ' Remove the MB part and convert the remaining number to an integer
+        num = CInt(Mid(lastID, 3)) + 1
+        
+        ' Create a new MemberID
+        newID = "MB" & Format(num, "000")
+    End If
+    
+    ' Add a new row
+    Set newRow = memberTable.ListRows.Add
+    With newRow.Range
+        .Cells(1, 1).Value = newID
+        .Cells(1, 2).Value = txtName.Value
+        .Cells(1, 3).Value = txtEmail.Value
+        .Cells(1, 4).Value = txtPhone.Value
+        .Cells(1, 5).Value = txtDate.Value
+        .Cells(1, 6).Value = txtAddress.Value
+    End With
+    
+    MsgBox "New member added successfully! Member ID: " & newID, vbInformation
+    
+    ' Clear the form fields
+    txtName.Value = ""
+    txtEmail.Value = ""
+    txtPhone.Value = ""
+    txtDate.Value = ""
+    txtAddress.Value = ""
+
+End Sub
+
+Private Sub btnCancel_Click()
+    ' Clear the form fields
+    txtName.Value = ""
+    txtEmail.Value = ""
+    txtPhone.Value = ""
+    txtDate.Value = ""
+    txtAddress.Value = ""
+
+    ' Close the form
+    Me.Hide
+End Sub
+
+Private Sub UserForm_Click()
+
+End Sub
