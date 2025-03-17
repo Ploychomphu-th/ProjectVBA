@@ -1,0 +1,72 @@
+Private Sub txtDeleteBookID_Change()
+    Dim ws As Worksheet
+    Dim bookTable As ListObject
+    Dim i As Long
+    Dim bookTitle As String
+    Dim found As Boolean
+    
+    ' Set the Worksheet and Table "Stock"
+    Set ws = ThisWorkbook.Sheets("Stock")
+    Set bookTable = ws.ListObjects("Book")
+    
+    found = False
+    bookTitle = ""
+    
+    ' Search the table for Book ID
+    For i = 1 To bookTable.ListRows.Count
+        If bookTable.ListRows(i).Range.Cells(1, 1).Value = txtDeleteBookID.Value Then
+            bookTitle = bookTable.ListRows(i).Range.Cells(1, 2).Value ' Get the book title
+            found = True
+            Exit For
+        End If
+    Next i
+    
+    If found Then
+        lblBookTitle.Caption = "Title: " & bookTitle ' Display book title in label
+        btnDelete.Enabled = True ' Enable Delete button
+    Else
+        lblBookTitle.Caption = "Book not found" ' Show message if book is not found
+        btnDelete.Enabled = False ' Disable Delete button
+    End If
+End Sub
+
+Private Sub btnDelete_Click()
+    Dim ws As Worksheet
+    Dim bookTable As ListObject
+    Dim i As Long
+    Dim bookID As String
+    
+    ' Set the Worksheet and Table "Stock"
+    Set ws = ThisWorkbook.Sheets("Stock")
+    Set bookTable = ws.ListObjects("Book")
+    
+    bookID = txtDeleteBookID.Value
+    
+    ' Search the table for the Book ID
+    For i = 1 To bookTable.ListRows.Count
+        If bookTable.ListRows(i).Range.Cells(1, 1).Value = bookID Then
+            bookTable.ListRows(i).Delete
+            MsgBox "The book has been successfully deleted!", vbInformation
+             txtDeleteBookID.Value = ""
+    lblBookTitle.Caption = ""
+            Exit Sub
+        End If
+    Next i
+   
+    ' Show message if the Book ID was not found
+    MsgBox "The Book ID was not found in the system", vbExclamation
+    
+End Sub
+
+Private Sub btnCancel_Click()
+    ' Clear all fields and hide the UserForm
+    txtDeleteBookID.Value = ""
+    lblBookTitle.Caption = ""
+    btnDelete.Enabled = False ' Disable Delete button
+    Me.Hide ' Close form
+End Sub
+
+Private Sub UserForm_Click()
+
+End Sub
+
