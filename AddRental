@@ -1,0 +1,145 @@
+  ' ยังไม่เสดดดดดดดด!!!!!
+Private Sub txtMemberID_Change()
+    Dim ws As Worksheet
+    Dim memberTable As ListObject
+    Dim found As Boolean
+    Dim i As Long
+    
+    ' Set Worksheet and Table
+    Set ws = ThisWorkbook.Sheets("Members")
+    Set memberTable = ws.ListObjects("MemberList")
+    
+    found = False
+    
+    ' Search for MemberID
+    For i = 1 To memberTable.ListRows.Count
+        If memberTable.ListRows(i).Range.Cells(1, 1).Value = txtMemberID.Value Then
+            lblMemberStatus.Caption = "Member Found"
+            lblMemberStatus.ForeColor = RGB(0, 128, 0) ' Green color
+            found = True
+            Exit For
+        End If
+    Next i
+    
+    If Not found Then
+        lblMemberStatus.Caption = "Member Not Found"
+        lblMemberStatus.ForeColor = RGB(255, 0, 0) ' Red color
+    End If
+End Sub
+
+Private Sub txtBookID_Change()
+    Dim ws As Worksheet
+    Dim bookTable As ListObject
+    Dim i As Long
+    Dim found As Boolean
+    
+    ' Set Worksheet and Table
+    Set ws = ThisWorkbook.Sheets("Stock")
+    Set bookTable = ws.ListObjects("Book")
+    
+    found = False
+    
+    ' Search for BookID
+    For i = 1 To bookTable.ListRows.Count
+        If bookTable.ListRows(i).Range.Cells(1, 1).Value = txtBookID.Value Then
+            txtTitle.Value = bookTable.ListRows(i).Range.Cells(1, 2).Value
+            txtRentalPrice.Value = bookTable.ListRows(i).Range.Cells(1, 6).Value
+            found = True
+            Exit For
+        End If
+    Next i
+    
+    If Not found Then
+        txtTitle.Value = ""
+        txtRentalPrice.Value = ""
+    End If
+End Sub
+
+Private Sub txtQuantity_Change()
+    ' Validate input data
+    If IsNumeric(txtQuantity.Value) And IsNumeric(txtRentalPrice.Value) Then
+        txtTotalPrice.Value = CInt(txtQuantity.Value) * CDbl(txtRentalPrice.Value)
+    Else
+        txtTotalPrice.Value = ""
+    End If
+End Sub
+
+Private Sub txtRentalDate_Change()
+    ' Set DueDate to 7 days after RentalDate
+    If IsDate(txtRentalDate.Value) Then
+        txtDueDate.Value = DateAdd("d", 7, CDate(txtRentalDate.Value))
+    Else
+        txtDueDate.Value = ""
+    End If
+End Sub
+
+Private Sub btnAdd_Click()
+    Dim ws As Worksheet
+    Dim orderTable As ListObject
+    Dim newRow As ListRow
+    Dim nextNo As Integer
+    
+    ' Validate that Member and Book exist
+    If lblMemberStatus.Caption = "Member Not Found" Or txtTitle.Value = "" Then
+        MsgBox "Invalid Member ID or Book ID!", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Set Worksheet and Table
+    Set ws = ThisWorkbook.Sheets("Rental")
+    Set orderTable = ws.ListObjects("Order")
+    
+    ' Get the next #No value
+    If orderTable.ListRows.Count = 0 Then
+        nextNo = 1
+    Else
+        nextNo = Application.WorksheetFunction.Max(orderTable.ListColumns(1).DataBodyRange) + 1
+    End If
+    
+    ' Add a new row to Table: Order
+    Set newRow = orderTable.ListRows.Add
+    With newRow.Range
+        .Cells(1, 1).Value = nextNo ' #No
+        .Cells(1, 2).Value = txtMemberID.Value
+        .Cells(1, 3).Value = txtBookID.Value
+        .Cells(1, 4).Value = txtTitle.Value
+        .Cells(1, 5).Value = txtRentalDate.Value
+        .Cells(1, 6).Value = txtDueDate.Value
+        .Cells(1, 7).Value = txtRentalPrice.Value
+        .Cells(1, 8).Value = txtQuantity.Value
+        .Cells(1, 9).Value = txtTotalPrice.Value
+    End With
+    
+    MsgBox "Rental added successfully!", vbInformation
+    
+    ' Clear values after adding data
+    
+    txtBookID.Value = ""
+    txtTitle.Value = ""
+    txtRentalPrice.Value = ""
+    txtQuantity.Value = ""
+    txtRentalDate.Value = Format(Date, "dd/mm/yyyy")
+    txtDueDate.Value = ""
+    txtTotalPrice.Value = ""
+    
+End Sub
+
+Private Sub btnCancel_Click()
+    ' Clear all values and close the form
+    txtMemberID.Value = ""
+    txtBookID.Value = ""
+    txtTitle.Value = ""
+    txtRentalPrice.Value = ""
+    txtQuantity.Value = ""
+    txtRentalDate.Value = Format(Date, "dd/mm/yyyy")
+    txtDueDate.Value = ""
+    txtTotalPrice.Value = ""
+    Me.Hide
+End Sub
+
+Private Sub UserForm_Initialize()
+    ' Set initial values
+    txtRentalDate.Value = Format(Date, "dd/mm/yyyy")
+    txtDueDate.Value = ""
+End Sub
+
