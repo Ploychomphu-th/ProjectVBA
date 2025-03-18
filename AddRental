@@ -1,19 +1,66 @@
-  ' ยังไม่เสดดดดดดดด!!!!!
-Private Sub txtMemberID_Change()
+Private Sub UserForm_Initialize()
+    ' Load MemberID and BookID into ComboBox
+    LoadMembers
+    LoadBooks
+    ' Set default values
+    txtRentalDate.Value = Format(Date, "dd-mm-yyyy")
+End Sub
+
+' Load MemberID from Table: MemberList
+Private Sub LoadMembers()
     Dim ws As Worksheet
     Dim memberTable As ListObject
-    Dim found As Boolean
     Dim i As Long
     
-    ' Set Worksheet and Table
+    ' Clear previous data
+    cmbMemberID.Clear
+    
+    ' Retrieve data from Table: MemberList
     Set ws = ThisWorkbook.Sheets("Members")
     Set memberTable = ws.ListObjects("MemberList")
     
+    ' Loop through and add MemberID to ComboBox
+    For i = 1 To memberTable.ListRows.Count
+        cmbMemberID.AddItem memberTable.ListRows(i).Range.Cells(1, 1).Value ' Add MemberID
+    Next i
+End Sub
+
+' Load BookID from Table: Book
+Private Sub LoadBooks()
+    Dim ws As Worksheet
+    Dim bookTable As ListObject
+    Dim i As Long
+    
+    ' Clear previous data
+    cmbBookID.Clear
+    
+    ' Retrieve data from Table: Book
+    Set ws = ThisWorkbook.Sheets("Stock")
+    Set bookTable = ws.ListObjects("Book")
+    
+    ' Loop through and add BookID to ComboBox
+    For i = 1 To bookTable.ListRows.Count
+        cmbBookID.AddItem bookTable.ListRows(i).Range.Cells(1, 1).Value ' Add BookID
+    Next i
+End Sub
+
+' Validate MemberID when selected from ComboBox
+Private Sub cmbMemberID_Change()
+    Dim ws As Worksheet
+    Dim memberTable As ListObject
+    Dim i As Long
+    Dim found As Boolean
+    
+    ' Initialize
     found = False
+    
+    ' Retrieve data from Table: MemberList
+    Set ws = ThisWorkbook.Sheets("Members")
+    Set memberTable = ws.ListObjects("MemberList")
     
     ' Search for MemberID
     For i = 1 To memberTable.ListRows.Count
-        If memberTable.ListRows(i).Range.Cells(1, 1).Value = txtMemberID.Value Then
+        If memberTable.ListRows(i).Range.Cells(1, 1).Value = cmbMemberID.Value Then
             lblMemberStatus.Caption = "Member Found"
             lblMemberStatus.ForeColor = RGB(0, 128, 0) ' Green color
             found = True
@@ -21,39 +68,46 @@ Private Sub txtMemberID_Change()
         End If
     Next i
     
+    ' If not found
     If Not found Then
         lblMemberStatus.Caption = "Member Not Found"
         lblMemberStatus.ForeColor = RGB(255, 0, 0) ' Red color
     End If
 End Sub
 
-Private Sub txtBookID_Change()
+' Validate BookID and retrieve Title & Rental Price
+Private Sub cmbBookID_Change()
     Dim ws As Worksheet
     Dim bookTable As ListObject
     Dim i As Long
     Dim found As Boolean
     
-    ' Set Worksheet and Table
+    ' Initialize
+    found = False
+    
+    ' Retrieve data from Table: Book
     Set ws = ThisWorkbook.Sheets("Stock")
     Set bookTable = ws.ListObjects("Book")
     
-    found = False
-    
     ' Search for BookID
     For i = 1 To bookTable.ListRows.Count
-        If bookTable.ListRows(i).Range.Cells(1, 1).Value = txtBookID.Value Then
-            txtTitle.Value = bookTable.ListRows(i).Range.Cells(1, 2).Value
-            txtRentalPrice.Value = bookTable.ListRows(i).Range.Cells(1, 6).Value
+        If bookTable.ListRows(i).Range.Cells(1, 1).Value = cmbBookID.Value Then
+            txtTitle.Value = bookTable.ListRows(i).Range.Cells(1, 2).Value ' Title
+            txtRentalPrice.Value = bookTable.ListRows(i).Range.Cells(1, 6).Value ' Rental Price
+            Label9.Caption = "Available Stock: " & bookTable.ListRows(i).Range.Cells(1, 7).Value ' Stock
             found = True
             Exit For
         End If
     Next i
     
+    ' If not found
     If Not found Then
         txtTitle.Value = ""
         txtRentalPrice.Value = ""
+        Label9.Caption = "Available Stock: 0"
     End If
 End Sub
+
 
 Private Sub txtQuantity_Change()
     ' Validate input data
@@ -76,8 +130,11 @@ End Sub
 Private Sub btnAdd_Click()
     Dim ws As Worksheet
     Dim orderTable As ListObject
+    Dim bookTable As ListObject
     Dim newRow As ListRow
     Dim nextNo As Integer
+    Dim stockQty As Integer
+    Dim i As Long
     
     ' Validate that Member and Book exist
     If lblMemberStatus.Caption = "Member Not Found" Or txtTitle.Value = "" Then
@@ -89,6 +146,26 @@ Private Sub btnAdd_Click()
     Set ws = ThisWorkbook.Sheets("Rental")
     Set orderTable = ws.ListObjects("Order")
     
+    ' Get Book Stock from Table: Book
+    Set ws = ThisWorkbook.Sheets("Stock") ' Sheet where Book Table is stored
+    Set bookTable = ws.ListObjects("Book")
+    
+    stockQty = 0 ' Default value
+
+    ' Search for BookID in Book Table
+    For i = 1 To bookTable.ListRows.Count
+        If bookTable.ListRows(i).Range.Cells(1, 1).Value = cmbBookID.Value Then
+            stockQty = bookTable.ListRows(i).Range.Cells(1, 7).Value ' Column 7 = Stock Quantity
+            Exit For
+        End If
+    Next i
+
+    ' Validate Quantity
+    If CInt(txtQuantity.Value) > stockQty Then
+        MsgBox "This item is Out of Stock! Cannot Add.", vbCritical, "Stock Error"
+        Exit Sub
+    End If
+
     ' Get the next #No value
     If orderTable.ListRows.Count = 0 Then
         nextNo = 1
@@ -100,8 +177,8 @@ Private Sub btnAdd_Click()
     Set newRow = orderTable.ListRows.Add
     With newRow.Range
         .Cells(1, 1).Value = nextNo ' #No
-        .Cells(1, 2).Value = txtMemberID.Value
-        .Cells(1, 3).Value = txtBookID.Value
+        .Cells(1, 2).Value = cmbMemberID.Value
+        .Cells(1, 3).Value = cmbBookID.Value
         .Cells(1, 4).Value = txtTitle.Value
         .Cells(1, 5).Value = txtRentalDate.Value
         .Cells(1, 6).Value = txtDueDate.Value
@@ -111,35 +188,32 @@ Private Sub btnAdd_Click()
     End With
     
     MsgBox "Rental added successfully!", vbInformation
-    
+
     ' Clear values after adding data
-    
-    txtBookID.Value = ""
+    cmbBookID.Value = ""
     txtTitle.Value = ""
     txtRentalPrice.Value = ""
     txtQuantity.Value = ""
-    txtRentalDate.Value = Format(Date, "dd/mm/yyyy")
-    txtDueDate.Value = ""
-    txtTotalPrice.Value = ""
+    txtRentalDate.Value = Format(Date, "dd-mm-yyyy")
     
+    txtTotalPrice.Value = ""
+
 End Sub
+
+
 
 Private Sub btnCancel_Click()
     ' Clear all values and close the form
-    txtMemberID.Value = ""
-    txtBookID.Value = ""
+    cmbMemberID.Value = ""
+    cmbBookID.Value = ""
     txtTitle.Value = ""
     txtRentalPrice.Value = ""
     txtQuantity.Value = ""
-    txtRentalDate.Value = Format(Date, "dd/mm/yyyy")
-    txtDueDate.Value = ""
+    txtRentalDate.Value = Format(Date, "dd-mm-yyyy")
+    
     txtTotalPrice.Value = ""
     Me.Hide
 End Sub
 
-Private Sub UserForm_Initialize()
-    ' Set initial values
-    txtRentalDate.Value = Format(Date, "dd/mm/yyyy")
-    txtDueDate.Value = ""
-End Sub
+
 
