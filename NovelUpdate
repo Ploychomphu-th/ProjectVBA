@@ -73,16 +73,41 @@ Private Sub btnCancel_Click()
 End Sub
 
 Private Sub UserForm_Initialize()
-    ' Populate ComboBox for Genre
-    Me.cboGenre.AddItem "Fiction"
-    Me.cboGenre.AddItem "Non-Fiction"
-    Me.cboGenre.AddItem "Sci-Fi"
-    Me.cboGenre.AddItem "Romance"
+    Dim ws As Worksheet
+    Dim tbl As ListObject
+    Dim rngGenre As Range, rngLanguage As Range
+    Dim cell As Range
+    Dim dictGenre As Object, dictLanguage As Object
     
-    ' Populate ComboBox for Language
-    Me.cboLanguage.AddItem "English"
-    Me.cboLanguage.AddItem "Thai"
-    Me.cboLanguage.AddItem "Japanese"
-    Me.cboLanguage.AddItem "Chinese"
+    ' Set the sheet that contains the Table: Book
+    Set ws = ThisWorkbook.Sheets("Stock") ' Change to the actual sheet name
+    Set tbl = ws.ListObjects("Book") ' Change to the actual table name
+
+    ' Use Dictionary to store unique values
+    Set dictGenre = CreateObject("Scripting.Dictionary")
+    Set dictLanguage = CreateObject("Scripting.Dictionary")
+
+    ' Retrieve Genre values
+    Set rngGenre = tbl.ListColumns("Genre").DataBodyRange
+    For Each cell In rngGenre
+        If Not dictGenre.exists(cell.Value) Then
+            dictGenre.Add cell.Value, Nothing
+            Me.cboGenre.AddItem cell.Value
+        End If
+    Next cell
+
+    ' Retrieve Language values
+    Set rngLanguage = tbl.ListColumns("Language").DataBodyRange
+    For Each cell In rngLanguage
+        If Not dictLanguage.exists(cell.Value) Then
+            dictLanguage.Add cell.Value, Nothing
+            Me.cboLanguage.AddItem cell.Value
+        End If
+    Next cell
+
+    ' Clean up variables
+    Set dictGenre = Nothing
+    Set dictLanguage = Nothing
 End Sub
+
 
