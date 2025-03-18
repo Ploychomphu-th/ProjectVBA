@@ -1,0 +1,43 @@
+Sub CreateStockLineChart()
+    Dim ws As Worksheet
+    Dim stockTable As ListObject
+    Dim chart As ChartObject
+    Dim productNames As Range
+    Dim stockQuantities As Range
+    
+    ' Set the worksheet to "Stock"
+    Set ws = ThisWorkbook.Sheets("Stock")
+    
+    ' Set the Table named "Book" or use the actual name of the table
+    Set stockTable = ws.ListObjects("Book")
+    
+    ' Set the ranges for Product Names (Title) and Stock Quantities
+    Set productNames = stockTable.ListColumns(2).DataBodyRange  ' Column 2 is Title (Product Name)
+    Set stockQuantities = stockTable.ListColumns(7).DataBodyRange  ' Column 7 is Stock
+    
+    ' Add a new Chart Object to the worksheet
+    Set chart = ws.ChartObjects.Add(Left:=100, Width:=500, Top:=50, Height:=300)
+    
+    ' Set up the chart with data and format
+    With chart.chart
+        .SetSourceData Source:=Union(productNames, stockQuantities)  ' Set the data source for the chart
+        .ChartType = xlLine  ' Set the chart type to Line Chart
+        .HasTitle = True  ' Enable chart title
+        .ChartTitle.Text = "Stock Quantity of Books"  ' Set the chart title
+        
+        ' Set the X-Axis (Product Names)
+        .Axes(xlCategory, xlPrimary).HasTitle = True
+        .Axes(xlCategory, xlPrimary).AxisTitle.Text = "Product Title"  ' Label the X-Axis as "Product Title"
+        
+        ' Set the Y-Axis (Stock Quantity)
+        .Axes(xlValue, xlPrimary).HasTitle = True
+        .Axes(xlValue, xlPrimary).AxisTitle.Text = "Stock Quantity"  ' Label the Y-Axis as "Stock Quantity"
+        
+        ' Set the Legend position at the bottom
+        .Legend.Position = xlLegendPositionBottom  ' Position the legend at the bottom of the chart
+    End With
+    
+    ' Display a message when the chart is created
+    MsgBox "Line Chart for stock quantity of books has been created!", vbInformation
+End Sub
+
