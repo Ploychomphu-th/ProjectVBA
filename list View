@@ -1,0 +1,159 @@
+Option Explicit
+
+
+' Triggered when txtMemberID changes
+Private Sub txtMemberID_Change()
+    Dim wsHistory As Worksheet
+    Dim tblHistory As ListObject
+    Dim r As ListRow
+    Dim memberID As String
+    Dim found As Boolean
+    
+    ' Connect to Sheet: Transaction and Table: History
+    Set wsHistory = ThisWorkbook.Sheets("Transaction")
+    Set tblHistory = wsHistory.ListObjects("History")
+    
+    memberID = Trim(txtMemberID.Value)
+    found = False
+    
+    ' Clear ListView before adding new data
+    lstHistory.ListItems.Clear
+    
+    ' Search for MemberID in Table: History
+    For Each r In tblHistory.ListRows
+        If r.Range.Cells(1, 3).Value = memberID Then ' Check if MemberID matches
+            found = True
+            With lstHistory.ListItems.Add
+                .Text = r.Range.Cells(1, 1).Value ' TSID
+                .SubItems(1) = r.Range.Cells(1, 2).Value ' #No
+                .SubItems(2) = r.Range.Cells(1, 4).Value ' BookID
+                .SubItems(3) = r.Range.Cells(1, 5).Value ' Title
+                .SubItems(4) = r.Range.Cells(1, 6).Value ' RentalDate
+                .SubItems(5) = r.Range.Cells(1, 7).Value ' DueDate
+                .SubItems(6) = r.Range.Cells(1, 8).Value ' RentalPrice
+                .SubItems(7) = r.Range.Cells(1, 9).Value ' Quantity
+            End With
+        End If
+    Next r
+    
+    ' Update Label to show whether MemberID is found or not
+    If found Then
+        lblStatus.Caption = "Member found"
+        lblStatus.ForeColor = RGB(0, 150, 0) ' Green color
+    Else
+        lblStatus.Caption = "Member not found"
+        lblStatus.ForeColor = RGB(255, 0, 0) ' Red color
+    End If
+End Sub
+
+
+
+' Button to return a selected book
+Private Sub btnReturnSelected_Click()
+    Dim wsHistory As Worksheet, wsBook As Worksheet
+    Dim tblHistory As ListObject, tblBook As ListObject
+    Dim bookRow As ListRow, historyRow As ListRow
+    Dim selectedItem As ListItem
+    Dim bookID As String
+    Dim returnQty As Integer
+    
+    ' Connect to Sheets and Tables
+    Set wsHistory = ThisWorkbook.Sheets("Transaction")
+    Set wsBook = ThisWorkbook.Sheets("Stock")
+    
+    Set tblHistory = wsHistory.ListObjects("History")
+    Set tblBook = wsBook.ListObjects("Book")
+    
+    ' Check if a book is selected
+    If lstHistory.selectedItem Is Nothing Then
+        MsgBox "Please select a book to return!", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Get data from selected ListView row
+    Set selectedItem = lstHistory.selectedItem
+    bookID = selectedItem.SubItems(2) ' BookID
+    returnQty = CInt(selectedItem.SubItems(7)) ' Quantity
+    
+    ' Find BookID in Table: Book and update stock
+    For Each bookRow In tblBook.ListRows
+        If bookRow.Range.Cells(1, 1).Value = bookID Then
+            bookRow.Range.Cells(1, 7).Value = bookRow.Range.Cells(1, 7).Value + returnQty
+            Exit For
+        End If
+    Next bookRow
+    
+    ' Update Status in Table: History
+    For Each historyRow In tblHistory.ListRows
+        If historyRow.Range.Cells(1, 1).Value = selectedItem.Text Then
+            historyRow.Range.Cells(1, 11).Value = "Returned" ' Assume column 11 is Status
+            Exit For
+        End If
+    Next historyRow
+    
+    ' Update ListView
+    txtMemberID_Change
+    MsgBox "Book returned successfully!", vbInformation
+End Sub
+
+' Button to return all books for a member
+Private Sub btnReturnAll_Click()
+    Dim wsHistory As Worksheet, wsBook As Worksheet
+    Dim tblHistory As ListObject, tblBook As ListObject
+    Dim historyRow As ListRow, bookRow As ListRow
+    Dim memberID As String
+    Dim bookID As String
+    Dim returnQty As Integer
+    
+    ' Connect to Sheets and Tables
+    Set wsHistory = ThisWorkbook.Sheets("Transaction")
+    Set wsBook = ThisWorkbook.Sheets("Stock")
+    
+    Set tblHistory = wsHistory.ListObjects("History")
+    Set tblBook = wsBook.ListObjects("Book")
+    
+    memberID = txtMemberID.Value
+    
+    ' Update stock and mark as returned in History
+    For Each historyRow In tblHistory.ListRows
+        If historyRow.Range.Cells(1, 3).Value = memberID Then
+            bookID = historyRow.Range.Cells(1, 4).Value ' BookID
+            returnQty = historyRow.Range.Cells(1, 9).Value ' Quantity
+            
+            ' Find BookID in Table: Book and update stock
+            For Each bookRow In tblBook.ListRows
+                If bookRow.Range.Cells(1, 1).Value = bookID Then
+                    bookRow.Range.Cells(1, 7).Value = bookRow.Range.Cells(1, 7).Value + returnQty
+                    Exit For
+                End If
+            Next bookRow
+            
+            ' Update Status in Table: History
+            historyRow.Range.Cells(1, 10).Value = "Returned" ' Assume column 10 is Status
+        End If
+    Next historyRow
+    
+    ' Update ListView
+    txtMemberID_Change
+    MsgBox "All books returned successfully!", vbInformation
+End Sub
+
+
+' Button to cancel and close the form
+Private Sub btnCancel_Click()
+    Unload Me ' Close form
+End Sub
+
+Private Sub UserForm_Initialize()
+    ' Initialize ListView columns
+    With lstHistory
+        .ColumnHeaders.Add , , "#No", 50 ' Column 1
+        .ColumnHeaders.Add , , "Member ID", 80 ' Column 2
+        .ColumnHeaders.Add , , "Book ID", 80 ' Column 3
+        .ColumnHeaders.Add , , "Title", 100 ' Column 4
+        .ColumnHeaders.Add , , "RentalDate", 80 ' Column 5
+        .ColumnHeaders.Add , , "DueDate", 80 ' Column 6
+        .ColumnHeaders.Add , , "RentalPrice", 80 ' Column 7
+        .ColumnHeaders.Add , , "Quantity", 80 ' Column 8
+    End With
+End Sub
